@@ -1,0 +1,16 @@
+#!/bin/sh -eu
+
+get_decorated_options() {
+  # option_extract > while read -r option;
+  while read -r option; do
+    name=$(echo "$option" | sed -rn 's/^\s*\{\s*"(\w+).*/\1/p')
+    printf '%s %s\n' "$name" ' '
+  done < option_extract
+}
+
+get_decorated_options
+exit
+
+for line in read -r decorated_option; do
+  echo $line
+done < $(get_decorated_options)
