@@ -44,4 +44,5 @@ while read -r decorated_option; do
   sed -r "s/^(\s*'$name'\t+)[-+* X]/\\1$decoration/" -i "$table_to_update"
 done
 
-sort -o "$table_to_update" "$table_to_update"
+# Must manually collate output due overflowed lines
+# sort -o "$table_to_update" "$table_to_update"
