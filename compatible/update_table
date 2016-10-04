@@ -24,7 +24,12 @@ function get_decorated_options {
   done < "$source_extract"
 }
 
-get_decorated_options | # Process list of <option> <decoration>
+# Clear out the current character flag column to check for options
+# which should not be listed - an 'X' in final output
+sed -r "s/^(\s*'\w+'\t+)[-+* ]/\\1X/" -i "$table_to_update"
+
+# Process list of <option> <decoration>
+get_decorated_options |
 while read -r decorated_option; do
   set $decorated_option # shellcheck disable=SC2086
   name="$1"; decoration="$2"
