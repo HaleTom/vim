@@ -1,4 +1,6 @@
 #!/bin/bash -eu
+table_to_update=./compatible_table
+source_extract=./option_extract
 
 function get_decorated_options {
   # option_extract > while read -r option;
@@ -10,7 +12,7 @@ function get_decorated_options {
       if [[ $line =~ 'P_VIM' ]]; then
         decoration='+'
       else
-        decoration='XXX' # Should not happen
+        decoration='XXXXXX' # Shouldn't happen, means bad input
       fi
     elif [[ $line =~ 'P_VIM' ]]; then
       decoration='\*' # Prevent shell expansion in 'set'
@@ -19,12 +21,22 @@ function get_decorated_options {
     fi
 
     printf '%s '%s'\n' "$name" "$decoration"
-  done < option_extract
+  done < "$source_extract"
 }
 
-
-get_decorated_options | while read -r decorated_option; do
+get_decorated_options | # Process list of <option> <decoration>
+while read -r decorated_option; do
   set $decorated_option # shellcheck disable=SC2086
   name="$1"; decoration="$2"
-  sed -rie "s/^(\s*'$name'\s)[-+* ]/\\1$decoration/" compatible_table
+
+  # Add missing entries to table
+  # grep -q "'$name'" "$table_to_update"
+  # if [[ ! $? ]]; then
+  if ! grep -q "'$name'" "$table_to_update"; then
+    printf "\t'%s'\t  \t\t\n" "$name" >> "$table_to_update"
+  fi
+
+  sed -r "s/^(\s*'$name'\t+)[-+* X]/\\1$decoration/" -i "$table_to_update"
 done
+
+sort -o "$table_to_update" "$table_to_update"
