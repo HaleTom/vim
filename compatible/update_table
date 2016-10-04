@@ -1,16 +1,30 @@
-#!/bin/sh -eu
+#!/bin/bash -eu
 
-get_decorated_options() {
+function get_decorated_options {
   # option_extract > while read -r option;
-  while read -r option; do
-    name=$(echo "$option" | sed -rn 's/^\s*\{\s*"(\w+).*/\1/p')
-    printf '%s %s\n' "$name" ' '
+  while read -r line; do
+    name=$(printf %s "$line" | sed -rn 's/^\s*\{\s*"(\w+).*/\1/p')
+
+    # Get decoration
+    if [[ $line =~ 'P_VI_DEF' ]]; then
+      if [[ $line =~ 'P_VIM' ]]; then
+        decoration='+'
+      else
+        decoration='XXX' # Should not happen
+      fi
+    elif [[ $line =~ 'P_VIM' ]]; then
+      decoration='\*' # Prevent shell expansion in 'set'
+    else
+      decoration='-'
+    fi
+
+    printf '%s '%s'\n' "$name" "$decoration"
   done < option_extract
 }
 
-get_decorated_options
-exit
 
-for line in read -r decorated_option; do
-  echo $line
-done < $(get_decorated_options)
+get_decorated_options | while read -r decorated_option; do
+  set $decorated_option # shellcheck disable=SC2086
+  name="$1"; decoration="$2"
+  sed -rie "s/^(\s*'$name'\s)[-+* ]/\\1$decoration/" compatible_table
+done
